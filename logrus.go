@@ -10,9 +10,8 @@ import (
 
 var fieldConfig FieldConfig
 
-const FIELDS = "logFields"
-
 func Initialize(c Config) *logrus.Logger {
+	fieldConfig.FieldMap = c.FieldMap
 	if len(c.Duration) > 0 {
 		fieldConfig.Duration = c.Duration
 	} else {
@@ -29,8 +28,8 @@ func Initialize(c Config) *logrus.Logger {
 	if len(c.TimestampFormat) > 0 {
 		formatter.TimestampFormat = c.TimestampFormat
 	}
-	if c.FieldMap != nil {
-		formatter.FieldMap = *c.FieldMap
+	if c.Map != nil {
+		formatter.FieldMap = *c.Map
 	}
 	x := &formatter
 	logger.SetFormatter(x)
@@ -45,7 +44,12 @@ func Initialize(c Config) *logrus.Logger {
 	}
 	return logger
 }
-
+func DebugDuration(ctx context.Context, start time.Time, args ...interface{}) {
+	LogDuration(ctx, logrus.DebugLevel, start, args)
+}
+func InfoDuration(ctx context.Context, start time.Time, args ...interface{}) {
+	LogDuration(ctx, logrus.InfoLevel, start, args)
+}
 func LogDuration(ctx context.Context, level logrus.Level, start time.Time, args ...interface{}) {
 	if logrus.IsLevelEnabled(level) {
 		end := time.Now()
@@ -93,9 +97,11 @@ func Logf(ctx context.Context, level logrus.Level, format string, args ...interf
 }
 
 func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
-	if logFields, ok := ctx.Value(FIELDS).(map[string]interface{}); ok {
-		for k, v := range logFields {
-			fields[k] = v
+	if len(fieldConfig.FieldMap) > 0 {
+		if logFields, ok := ctx.Value(fieldConfig.FieldMap).(map[string]interface{}); ok {
+			for k, v := range logFields {
+				fields[k] = v
+			}
 		}
 	}
 	if fieldConfig.Fields != nil {
