@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
@@ -46,23 +47,45 @@ func Initialize(c Config) *logrus.Logger {
 }
 
 func LogDuration(ctx context.Context, level logrus.Level, start time.Time, args ...interface{}) {
-	end := time.Now()
-	duration := end.Sub(start)
-	fields := AppendFields(ctx, logrus.Fields{})
-	fields[fieldConfig.Duration] = duration.Milliseconds()
-	logrus.WithFields(fields).Log(level, args...)
+	if logrus.IsLevelEnabled(level) {
+		end := time.Now()
+		duration := end.Sub(start)
+		fields := AppendFields(ctx, logrus.Fields{})
+		fields[fieldConfig.Duration] = duration.Milliseconds()
+		logrus.WithFields(fields).Log(level, args...)
+	}
 }
 func LogfDuration(ctx context.Context, level logrus.Level, start time.Time, format string, args ...interface{}) {
-	end := time.Now()
-	duration := end.Sub(start)
-	fields := AppendFields(ctx, logrus.Fields{})
-	fields[fieldConfig.Duration] = duration.Milliseconds()
-	logrus.WithFields(fields).Logf(level, format, args...)
+	if logrus.IsLevelEnabled(level) {
+		end := time.Now()
+		duration := end.Sub(start)
+		fields := AppendFields(ctx, logrus.Fields{})
+		fields[fieldConfig.Duration] = duration.Milliseconds()
+		logrus.WithFields(fields).Logf(level, format, args...)
+	}
 }
 
 func Log(ctx context.Context, level logrus.Level, args ...interface{}) {
-	fields := AppendFields(ctx, logrus.Fields{})
-	logrus.WithFields(fields).Log(level, args...)
+	if logrus.IsLevelEnabled(level) {
+		fields := AppendFields(ctx, logrus.Fields{})
+		if len(args) == 1 {
+			msg := args[0]
+			s1, ok := msg.(string)
+			if ok {
+				logrus.WithFields(fields).Log(level, s1)
+			} else {
+				bs, err := json.Marshal(msg)
+				if err != nil {
+					logrus.WithFields(fields).Log(level, args...)
+				} else {
+					s2 := string(bs)
+					logrus.WithFields(fields).Log(level, s2)
+				}
+			}
+		} else {
+			logrus.WithFields(fields).Log(level, args...)
+		}
+	}
 }
 func Logf(ctx context.Context, level logrus.Level, format string, args ...interface{}) {
 	fields := AppendFields(ctx, logrus.Fields{})
