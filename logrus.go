@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
@@ -92,8 +93,10 @@ func Log(ctx context.Context, level logrus.Level, args ...interface{}) {
 	}
 }
 func Logf(ctx context.Context, level logrus.Level, format string, args ...interface{}) {
-	fields := AppendFields(ctx, logrus.Fields{})
-	logrus.WithFields(fields).Logf(level, format, args...)
+	if logrus.IsLevelEnabled(level) {
+		fields := AppendFields(ctx, logrus.Fields{})
+		logrus.WithFields(fields).Logf(level, format, args...)
+	}
 }
 
 func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
@@ -157,4 +160,82 @@ func Debugf(ctx context.Context, format string, args ...interface{}) {
 }
 func Tracef(ctx context.Context, format string, args ...interface{}) {
 	Logf(ctx, logrus.TraceLevel, format, args...)
+}
+
+func BuildLogFields(m map[string]interface{}) logrus.Fields {
+	logFields := logrus.Fields{}
+	for k, v := range m {
+		logFields[k] = v
+	}
+	return logFields
+}
+func LogWithFields(ctx context.Context, level logrus.Level, msg interface{}, fields map[string]interface{}) {
+	if msg == nil {
+		return
+	}
+	if logrus.IsLevelEnabled(level) {
+		fs := BuildLogFields(fields)
+		fs2 := AppendFields(ctx, fs)
+		s1, ok := msg.(string)
+		if ok {
+			logrus.WithFields(fs2).Log(level, s1)
+		} else {
+			bs, err := json.Marshal(msg)
+			if err != nil {
+				logrus.WithFields(fs2).Log(level, msg)
+			} else {
+				s2 := string(bs)
+				logrus.WithFields(fs2).Log(level, s2)
+			}
+		}
+	}
+}
+func LogfWithFields(ctx context.Context, level logrus.Level, fields map[string]interface{}, format string, args ...interface{}) {
+	if logrus.IsLevelEnabled(level) {
+		fs := BuildLogFields(fields)
+		fs2 := AppendFields(ctx, fs)
+		msg := fmt.Sprintf(format, args...)
+		logrus.WithFields(fs2).Log(level, msg)
+	}
+}
+func DebugWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.DebugLevel, msg, fields)
+}
+func DebugfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	if logrus.IsLevelEnabled(logrus.DebugLevel) {
+		msg := fmt.Sprintf(format, args...)
+		LogWithFields(ctx, logrus.DebugLevel, msg, fields)
+	}
+}
+func InfoWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.InfoLevel, msg, fields)
+}
+func InfofWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	if logrus.IsLevelEnabled(logrus.InfoLevel) {
+		msg := fmt.Sprintf(format, args...)
+		LogWithFields(ctx, logrus.InfoLevel, msg, fields)
+	}
+}
+func WarnWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+}
+func WarnfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	if logrus.IsLevelEnabled(logrus.WarnLevel) {
+		msg := fmt.Sprintf(format, args...)
+		LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+	}
+}
+func ErrorWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.ErrorLevel, msg, fields)
+}
+func ErrorfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+}
+func FatalWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.FatalLevel, msg, fields)
+}
+func FatalfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
 }
