@@ -117,7 +117,9 @@ func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
 	}
 	return fields
 }
-
+func ErrorMsg(ctx context.Context, msg string) {
+	Error(ctx, msg)
+}
 func Panic(ctx context.Context, args ...interface{}) {
 	Log(ctx, logrus.PanicLevel, args...)
 }
