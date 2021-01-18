@@ -117,8 +117,26 @@ func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
 	}
 	return fields
 }
+func FatalMsg(ctx context.Context, msg string) {
+	Fatal(ctx, msg)
+}
+func PanicMsg(ctx context.Context, msg string) {
+	Panic(ctx, msg)
+}
 func ErrorMsg(ctx context.Context, msg string) {
 	Error(ctx, msg)
+}
+func WarnMsg(ctx context.Context, msg string) {
+	Warn(ctx, msg)
+}
+func InfoMsg(ctx context.Context, msg string) {
+	Info(ctx, msg)
+}
+func DebugMsg(ctx context.Context, msg string) {
+	Info(ctx, msg)
+}
+func TraceMsg(ctx context.Context, msg string) {
+	Trace(ctx, msg)
 }
 func Panic(ctx context.Context, args ...interface{}) {
 	Log(ctx, logrus.PanicLevel, args...)
