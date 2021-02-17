@@ -45,6 +45,19 @@ func Initialize(c Config) *logrus.Logger {
 	}
 	return logger
 }
+func Key(logger *logrus.Logger) map[string]string {
+	f1, ok := logger.Formatter.(*logrus.JSONFormatter)
+	if ok {
+		maps := make(map[string]string)
+		fms := f1.FieldMap
+		for k, e := range fms {
+			k2 := fmt.Sprint(k)
+			maps[k2] = e
+		}
+		return maps
+	}
+	return nil
+}
 func DebugDuration(ctx context.Context, start time.Time, args ...interface{}) {
 	LogDuration(ctx, logrus.DebugLevel, start, args)
 }
@@ -258,4 +271,25 @@ func FatalWithFields(ctx context.Context, msg interface{}, fields map[string]int
 func FatalfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+}
+func TraceFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.TraceLevel, msg, fields)
+}
+func DebugFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.DebugLevel, msg, fields)
+}
+func InfoFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.InfoLevel, msg, fields)
+}
+func WarnFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+}
+func ErrorFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.ErrorLevel, msg, fields)
+}
+func FatalFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.FatalLevel, msg, fields)
+}
+func PanicFields(ctx context.Context, msg string, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.PanicLevel, msg, fields)
 }
