@@ -35,6 +35,31 @@ func Initialize(c Config) (*zap.Logger, error) {
 	return l, err
 }
 
+func IsDebugEnable() bool {
+	if logger == nil {
+		return false
+	}
+	return logger.Core().Enabled(zapcore.DebugLevel)
+}
+func IsInfoEnable() bool {
+	if logger == nil {
+		return false
+	}
+	return logger.Core().Enabled(zapcore.InfoLevel)
+}
+func IsWarnEnable() bool {
+	if logger == nil {
+		return false
+	}
+	return logger.Core().Enabled(zapcore.WarnLevel)
+}
+func IsErrorEnable() bool {
+	if logger == nil {
+		return false
+	}
+	return logger.Core().Enabled(zapcore.ErrorLevel)
+}
+
 func NewConfig(c Config) zap.Config {
 	level := zap.NewAtomicLevelAt(zap.InfoLevel)
 	if c.Level == "debug" {
@@ -106,6 +131,7 @@ func NewEncoderConfig(c Config) zapcore.EncoderConfig {
 func Logger() *zap.Logger {
 	return logger
 }
+
 func FatalMsg(ctx context.Context, msg string) {
 	Fatal(ctx, msg)
 }
@@ -211,27 +237,6 @@ func Warn(ctx context.Context, msg interface{}, fs ...zap.Field) {
 		}
 	}
 }
-func DebugMessage(ctx context.Context, msg string, fs ...zap.Field) {
-	if !logger.Core().Enabled(zapcore.DebugLevel) {
-		return
-	}
-	fields := make([]zap.Field, 0)
-	f2 := AppendFields(ctx, fields, fs...)
-	logger.Debug(msg, f2...)
-}
-func InfoMessage(ctx context.Context, msg string, fs ...zap.Field) {
-	if !logger.Core().Enabled(zapcore.InfoLevel) {
-		return
-	}
-	fields := make([]zap.Field, 0)
-	f2 := AppendFields(ctx, fields, fs...)
-	logger.Info(msg, f2...)
-}
-func WarnMessage(ctx context.Context, msg string, fs ...zap.Field) {
-	fields := make([]zap.Field, 0)
-	f2 := AppendFields(ctx, fields, fs...)
-	logger.Warn(msg, f2...)
-}
 func Error(ctx context.Context, msg interface{}, fs ...zap.Field) {
 	if msg == nil {
 		return
@@ -292,6 +297,28 @@ func DPanic(ctx context.Context, msg interface{}, fs ...zap.Field) {
 		}
 	}
 }
+
+func DebugMessage(ctx context.Context, msg string, fs ...zap.Field) {
+	if !logger.Core().Enabled(zapcore.DebugLevel) {
+		return
+	}
+	fields := make([]zap.Field, 0)
+	f2 := AppendFields(ctx, fields, fs...)
+	logger.Debug(msg, f2...)
+}
+func InfoMessage(ctx context.Context, msg string, fs ...zap.Field) {
+	if !logger.Core().Enabled(zapcore.InfoLevel) {
+		return
+	}
+	fields := make([]zap.Field, 0)
+	f2 := AppendFields(ctx, fields, fs...)
+	logger.Info(msg, f2...)
+}
+func WarnMessage(ctx context.Context, msg string, fs ...zap.Field) {
+	fields := make([]zap.Field, 0)
+	f2 := AppendFields(ctx, fields, fs...)
+	logger.Warn(msg, f2...)
+}
 func ErrorMessage(ctx context.Context, msg string, fs ...zap.Field) {
 	fields := make([]zap.Field, 0)
 	f2 := AppendFields(ctx, fields, fs...)
@@ -312,6 +339,7 @@ func DPanicMessage(ctx context.Context, msg string, fs ...zap.Field) {
 	f2 := AppendFields(ctx, fields, fs...)
 	logger.DPanic(msg, f2...)
 }
+
 func AppendFields(ctx context.Context, fields []zap.Field, fs ...zap.Field) []zap.Field {
 	l := len(fs)
 	for i := 0; i < l; i++ {
@@ -399,6 +427,7 @@ func BuildLogFields(m map[string]interface{}) []zap.Field {
 	}
 	return fields
 }
+
 func DebugWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
 	if !logger.Core().Enabled(zapcore.DebugLevel) {
 		return
@@ -453,6 +482,15 @@ func ErrorfWithFields(ctx context.Context, fields map[string]interface{}, format
 	msg := fmt.Sprintf(format, args...)
 	Error(ctx, msg, fs...)
 }
+func FatalWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	fs := BuildLogFields(fields)
+	Fatal(ctx, msg, fs...)
+}
+func FatalfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	fs := BuildLogFields(fields)
+	msg := fmt.Sprintf(format, args...)
+	Fatal(ctx, msg, fs...)
+}
 func PanicWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
 	fs := BuildLogFields(fields)
 	Panic(ctx, msg, fs...)
@@ -470,15 +508,6 @@ func DPanicfWithFields(ctx context.Context, fields map[string]interface{}, forma
 	fs := BuildLogFields(fields)
 	msg := fmt.Sprintf(format, args...)
 	DPanic(ctx, msg, fs...)
-}
-func FatalWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
-	fs := BuildLogFields(fields)
-	Fatal(ctx, msg, fs...)
-}
-func FatalfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
-	fs := BuildLogFields(fields)
-	msg := fmt.Sprintf(format, args...)
-	Fatal(ctx, msg, fs...)
 }
 
 func DebugFields(ctx context.Context, msg string, fields map[string]interface{}) {

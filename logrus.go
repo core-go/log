@@ -10,6 +10,7 @@ import (
 )
 
 var fieldConfig FieldConfig
+var logger *logrus.Logger
 
 func Initialize(c Config) *logrus.Logger {
 	fieldConfig.FieldMap = c.FieldMap
@@ -22,7 +23,7 @@ func Initialize(c Config) *logrus.Logger {
 		fields := strings.Split(c.Fields, ",")
 		fieldConfig.Fields = &fields
 	}
-	logger := logrus.New()
+	l := logrus.New()
 
 	// kibana: time:@timestamp msg:message
 	formatter := logrus.JSONFormatter{TimestampFormat: "2006-01-02T15:04:05.000Z0700"}
@@ -33,18 +34,36 @@ func Initialize(c Config) *logrus.Logger {
 		formatter.FieldMap = *c.Map
 	}
 	x := &formatter
-	logger.SetFormatter(x)
+	l.SetFormatter(x)
 	logrus.SetFormatter(x)
 	if len(c.Level) > 0 {
 		if level, err := logrus.ParseLevel(c.Level); err == nil {
-			logger.SetLevel(level)
+			l.SetLevel(level)
 			logrus.SetLevel(level)
 		} else {
 			logrus.Errorf("Can't parse LOG_LEVEL: %s.", c.Level)
 		}
 	}
-	return logger
+	logger = l
+	return l
 }
+
+func IsTraceEnable() bool {
+	return logrus.IsLevelEnabled(logrus.TraceLevel)
+}
+func IsDebugEnable() bool {
+	return logrus.IsLevelEnabled(logrus.DebugLevel)
+}
+func IsInfoEnable() bool {
+	return logrus.IsLevelEnabled(logrus.InfoLevel)
+}
+func IsWarnEnable() bool {
+	return logrus.IsLevelEnabled(logrus.WarnLevel)
+}
+func IsErrorEnable() bool {
+	return logrus.IsLevelEnabled(logrus.ErrorLevel)
+}
+
 func Key(logger *logrus.Logger) map[string]string {
 	f1, ok := logger.Formatter.(*logrus.JSONFormatter)
 	if ok {
@@ -57,6 +76,32 @@ func Key(logger *logrus.Logger) map[string]string {
 		return maps
 	}
 	return nil
+}
+
+func Logger() *logrus.Logger {
+	return logger
+}
+
+func FatalMsg(ctx context.Context, msg string) {
+	Fatal(ctx, msg)
+}
+func PanicMsg(ctx context.Context, msg string) {
+	Panic(ctx, msg)
+}
+func ErrorMsg(ctx context.Context, msg string) {
+	Error(ctx, msg)
+}
+func WarnMsg(ctx context.Context, msg string) {
+	Warn(ctx, msg)
+}
+func InfoMsg(ctx context.Context, msg string) {
+	Info(ctx, msg)
+}
+func DebugMsg(ctx context.Context, msg string) {
+	Info(ctx, msg)
+}
+func TraceMsg(ctx context.Context, msg string) {
+	Trace(ctx, msg)
 }
 func DebugDuration(ctx context.Context, start time.Time, args ...interface{}) {
 	LogDuration(ctx, logrus.DebugLevel, start, args)
@@ -112,6 +157,28 @@ func Logf(ctx context.Context, level logrus.Level, format string, args ...interf
 	}
 }
 
+func Trace(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.TraceLevel, args...)
+}
+func Debug(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.DebugLevel, args...)
+}
+func Info(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.InfoLevel, args...)
+}
+func Warn(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.WarnLevel, args...)
+}
+func Error(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.ErrorLevel, args...)
+}
+func Fatal(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.FatalLevel, args...)
+}
+func Panic(ctx context.Context, args ...interface{}) {
+	Log(ctx, logrus.PanicLevel, args...)
+}
+
 func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
 	if len(fieldConfig.FieldMap) > 0 {
 		if logFields, ok := ctx.Value(fieldConfig.FieldMap).(map[string]interface{}); ok {
@@ -130,69 +197,27 @@ func AppendFields(ctx context.Context, fields logrus.Fields) logrus.Fields {
 	}
 	return fields
 }
-func FatalMsg(ctx context.Context, msg string) {
-	Fatal(ctx, msg)
-}
-func PanicMsg(ctx context.Context, msg string) {
-	Panic(ctx, msg)
-}
-func ErrorMsg(ctx context.Context, msg string) {
-	Error(ctx, msg)
-}
-func WarnMsg(ctx context.Context, msg string) {
-	Warn(ctx, msg)
-}
-func InfoMsg(ctx context.Context, msg string) {
-	Info(ctx, msg)
-}
-func DebugMsg(ctx context.Context, msg string) {
-	Info(ctx, msg)
-}
-func TraceMsg(ctx context.Context, msg string) {
-	Trace(ctx, msg)
-}
-func Panic(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.PanicLevel, args...)
-}
-func Fatal(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.FatalLevel, args...)
-}
-func Error(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.ErrorLevel, args...)
-}
-func Warn(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.WarnLevel, args...)
-}
-func Info(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.InfoLevel, args...)
-}
-func Debug(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.DebugLevel, args...)
-}
-func Trace(ctx context.Context, args ...interface{}) {
-	Log(ctx, logrus.TraceLevel, args...)
-}
 
-func Panicf(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.PanicLevel, format, args...)
-}
-func Fatalf(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.FatalLevel, format, args...)
-}
-func Errorf(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.ErrorLevel, format, args...)
-}
-func Warnf(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.WarnLevel, format, args...)
-}
-func Infof(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.InfoLevel, format, args...)
+func Tracef(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.TraceLevel, format, args...)
 }
 func Debugf(ctx context.Context, format string, args ...interface{}) {
 	Logf(ctx, logrus.DebugLevel, format, args...)
 }
-func Tracef(ctx context.Context, format string, args ...interface{}) {
-	Logf(ctx, logrus.TraceLevel, format, args...)
+func Infof(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.InfoLevel, format, args...)
+}
+func Warnf(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.WarnLevel, format, args...)
+}
+func Errorf(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.ErrorLevel, format, args...)
+}
+func Fatalf(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.FatalLevel, format, args...)
+}
+func Panicf(ctx context.Context, format string, args ...interface{}) {
+	Logf(ctx, logrus.PanicLevel, format, args...)
 }
 
 func BuildLogFields(m map[string]interface{}) logrus.Fields {
@@ -231,6 +256,7 @@ func LogfWithFields(ctx context.Context, level logrus.Level, fields map[string]i
 		logrus.WithFields(fs2).Log(level, msg)
 	}
 }
+
 func DebugWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
 	LogWithFields(ctx, logrus.DebugLevel, msg, fields)
 }
@@ -263,15 +289,23 @@ func ErrorWithFields(ctx context.Context, msg interface{}, fields map[string]int
 }
 func ErrorfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
-	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+	LogWithFields(ctx, logrus.ErrorLevel, msg, fields)
 }
 func FatalWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
 	LogWithFields(ctx, logrus.FatalLevel, msg, fields)
 }
 func FatalfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
-	LogWithFields(ctx, logrus.WarnLevel, msg, fields)
+	LogWithFields(ctx, logrus.FatalLevel, msg, fields)
 }
+func PanicWithFields(ctx context.Context, msg interface{}, fields map[string]interface{}) {
+	LogWithFields(ctx, logrus.PanicLevel, msg, fields)
+}
+func PanicfWithFields(ctx context.Context, fields map[string]interface{}, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	LogWithFields(ctx, logrus.PanicLevel, msg, fields)
+}
+
 func TraceFields(ctx context.Context, msg string, fields map[string]interface{}) {
 	LogWithFields(ctx, logrus.TraceLevel, msg, fields)
 }
