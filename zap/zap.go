@@ -424,6 +424,9 @@ func Panicf(ctx context.Context, format string, args ...interface{}) {
 
 func BuildLogFields(m map[string]interface{}) []zap.Field {
 	fields := make([]zap.Field, 0)
+	if m == nil || len(m) == 0 {
+		return fields
+	}
 	for k, v := range m {
 		s, ok := v.(string)
 		if ok {
@@ -558,4 +561,54 @@ func PanicFields(ctx context.Context, msg string, fields map[string]interface{})
 }
 func DPanicFields(ctx context.Context, msg string, fields map[string]interface{}) {
 	DPanicWithFields(ctx, msg, fields)
+}
+
+func LogDebug(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		DebugWithFields(ctx, msg, opts[0])
+	} else {
+		DebugWithFields(ctx, msg, nil)
+	}
+}
+func LogInfo(ctx context.Context, msg string, opts... map[string]interface{}) {
+	if len(opts) > 0 {
+		InfoWithFields(ctx, msg, opts[0])
+	} else {
+		InfoWithFields(ctx, msg, nil)
+	}
+}
+func LogWarn(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		WarnWithFields(ctx, msg, opts[0])
+	} else {
+		WarnWithFields(ctx, msg, nil)
+	}
+}
+func LogError(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		ErrorWithFields(ctx, msg, opts[0])
+	} else {
+		ErrorWithFields(ctx, msg, nil)
+	}
+}
+func LogFatal(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		FatalWithFields(ctx, msg, opts[0])
+	} else {
+		FatalWithFields(ctx, msg, nil)
+	}
+}
+func LogPanic(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		PanicWithFields(ctx, msg, opts[0])
+	} else {
+		PanicWithFields(ctx, msg, nil)
+	}
+}
+func LogDPanic(ctx context.Context, msg string, opts...map[string]interface{}) {
+	if len(opts) > 0 {
+		DPanicWithFields(ctx, msg, opts[0])
+	} else {
+		DPanicWithFields(ctx, msg, nil)
+	}
 }
