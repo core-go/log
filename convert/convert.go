@@ -3,6 +3,9 @@ package convert
 import "strings"
 
 func ToCamelCase(m map[string]string) map[string]string {
+	if m == nil {
+		return nil
+	}
 	p := make(map[string]string)
 	for key, element := range m {
 		n := ToCamel(key)
