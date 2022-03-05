@@ -1,11 +1,9 @@
-package middleware
+package echo
 
 import (
-	"context"
 	"net"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func InitializeFieldConfig(c LogConfig) {
@@ -36,36 +34,6 @@ func InitializeFieldConfig(c LogConfig) {
 	if len(c.Skips) > 0 {
 		fields := strings.Split(c.Skips, ",")
 		fieldConfig.Skips = fields
-	}
-}
-func Logger(c LogConfig, log func(ctx context.Context, msg string, fields map[string]interface{}), f Formatter) func(h http.Handler) http.Handler {
-	InitializeFieldConfig(c)
-	return func(h http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			if !fieldConfig.Log || InSkipList(r, fieldConfig.Skips) {
-				h.ServeHTTP(w, r)
-			} else {
-				dw := NewResponseWriter(w)
-				ww := NewWrapResponseWriter(dw, r.ProtoMajor)
-				startTime := time.Now()
-				fields := BuildLogFields(c, r)
-				single := !c.Separate
-				if r.Method == "GET" || r.Method == "DELETE" {
-					single = true
-				}
-				f.LogRequest(log, r, c, fields, single)
-				defer func() {
-					if single {
-						f.LogResponse(log, r, ww, c, startTime, dw.Body.String(), fields, single)
-					} else {
-						resLogFields := BuildLogFields(c, r)
-						f.LogResponse(log, r, ww, c, startTime, dw.Body.String(), resLogFields, single)
-					}
-				}()
-				h.ServeHTTP(ww, r)
-			}
-		}
-		return http.HandlerFunc(fn)
 	}
 }
 func InSkipList(r *http.Request, skips []string) bool {

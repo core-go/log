@@ -1,4 +1,4 @@
-package middleware
+package gin
 
 import (
 	"bytes"
