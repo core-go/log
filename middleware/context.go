@@ -100,7 +100,7 @@ func BuildContextWithMask(next http.Handler, mask func(fieldName, s string) stri
 				}
 			}
 		} else {
-			if len(fieldConfig.Ip) == 0 && fieldConfig.Constants == nil {
+			if len(fieldConfig.Ip) == 0 && fieldConfig.Constants == nil && fieldConfig.Headers == nil {
 				next.ServeHTTP(w, r)
 			} else {
 				next.ServeHTTP(w, r.WithContext(ctx))

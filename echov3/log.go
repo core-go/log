@@ -70,6 +70,14 @@ func (l *EchoLogger) BuildContextWithMask(next echo.HandlerFunc) echo.HandlerFun
 		}
 
 		r := c.Request()
+		if fieldConfig.Headers != nil && len(fieldConfig.Headers) > 0 {
+			for k, e := range fieldConfig.Headers {
+				if len(e) > 0 {
+					header := r.Header.Get(e)
+					ctx = context.WithValue(ctx, k, header)
+				}
+			}
+		}
 		if fieldConfig.Map != nil && len(fieldConfig.Map) > 0 && r.Body != nil && (r.Method != "GET" || r.Method != "DELETE") {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(r.Body)
@@ -141,7 +149,7 @@ func (l *EchoLogger) BuildContextWithMask(next echo.HandlerFunc) echo.HandlerFun
 				}
 			}
 		} else {
-			if len(fieldConfig.Ip) == 0 && fieldConfig.Constants == nil {
+			if len(fieldConfig.Ip) == 0 && fieldConfig.Constants == nil && fieldConfig.Headers == nil {
 				return next(c)
 			} else {
 				ctxEcho.SetRequest(c.Request().WithContext(ctx))
