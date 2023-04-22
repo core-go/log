@@ -36,7 +36,7 @@ func (l *EchoLogger) Logger(next echo.HandlerFunc) echo.HandlerFunc {
 			startTime := time.Now()
 			fields := BuildLogFields(l.Config, r)
 			single := !l.Config.Separate
-			if r.Method == "GET" || r.Method == "DELETE" {
+			if r.Method == "GET" || r.Method == "DELETE" || strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
 				single = true
 			}
 
