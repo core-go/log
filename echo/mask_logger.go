@@ -15,14 +15,14 @@ type MaskLogger struct {
 	send       func(ctx context.Context, data []byte, attributes map[string]string) (string, error)
 	KeyMap     map[string]string
 	Goroutines bool
-	MaskRequest func(fieldName string, v interface{}) interface{}
-	MaskResponse func(fieldName string, v interface{}) interface{}
+	MaskRequest func(map[string]interface{})
+	MaskResponse func(map[string]interface{})
 }
 
-func NewMaskLogger(maskRequest func(fieldName string, v interface{}) interface{}, maskResponse func(fieldName string, v interface{}) interface{}) *MaskLogger {
+func NewMaskLogger(maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{})) *MaskLogger {
 	return &MaskLogger{MaskRequest: maskRequest, MaskResponse: maskResponse}
 }
-func NewMaskLoggerWithSending(maskRequest func(fieldName string, v interface{}) interface{}, maskResponse func(fieldName string, v interface{}) interface{}, send func(context.Context, []byte, map[string]string) (string, error), goroutines bool, options ...map[string]string) *MaskLogger {
+func NewMaskLoggerWithSending(maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), send func(context.Context, []byte, map[string]string) (string, error), goroutines bool, options ...map[string]string) *MaskLogger {
 	var keyMap map[string]string
 	if len(options) >= 1 {
 		keyMap = options[0]
@@ -66,16 +66,14 @@ func (l *MaskLogger) LogRequest(log func(context.Context, string, map[string]int
 	}
 }
 
-func BuildMaskedResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, response string, fields map[string]interface{}, mask func(fieldName string, s interface{}) interface{}) map[string]interface{} {
+func BuildMaskedResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, response string, fields map[string]interface{}, mask func(map[string]interface{})) map[string]interface{} {
 	if len(c.Response) > 0 {
 		fields[c.Response] = response
 		responseBody := response
 		responseMap := map[string]interface{}{}
 		json.Unmarshal([]byte(responseBody), &responseMap)
 		if len(responseMap) > 0 {
-			for key, v := range responseMap {
-				responseMap[key] = mask(key, v)
-			}
+			mask(responseMap)
 			responseString, err :=  json.Marshal(responseMap)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
@@ -97,7 +95,7 @@ func BuildMaskedResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, r
 	}
 	return fields
 }
-func BuildMaskedRequestBody(r *http.Request, request string, fields map[string]interface{}, mask func(fieldName string, s interface{}) interface{}) map[string]interface{} {
+func BuildMaskedRequestBody(r *http.Request, request string, fields map[string]interface{}, mask func(map[string]interface{})) map[string]interface{} {
 	if r.Body != nil {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
@@ -107,9 +105,7 @@ func BuildMaskedRequestBody(r *http.Request, request string, fields map[string]i
 		requestMap := map[string]interface{}{}
 		json.Unmarshal([]byte(requestBody), &requestMap)
 		if len(requestMap) > 0 {
-			for key, v := range requestMap {
-				requestMap[key] = mask(key, v)
-			}
+			mask(requestMap)
 			requestString, err :=  json.Marshal(requestMap)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
