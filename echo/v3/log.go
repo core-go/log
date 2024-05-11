@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/labstack/echo"
-	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -80,7 +79,7 @@ func (l *EchoLogger) BuildContextWithMask(next echo.HandlerFunc) echo.HandlerFun
 		if fieldConfig.Map != nil && len(fieldConfig.Map) > 0 && r.Body != nil && (r.Method != "GET" || r.Method != "DELETE") {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(r.Body)
-			r.Body = ioutil.NopCloser(buf)
+			r.Body = io.NopCloser(buf)
 			var v interface{}
 			er2 := json.NewDecoder(strings.NewReader(buf.String())).Decode(&v)
 			if er2 != nil {

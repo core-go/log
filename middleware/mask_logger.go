@@ -5,23 +5,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 )
 
 type MaskLogger struct {
-	send       func(ctx context.Context, data []byte, attributes map[string]string) (string, error)
-	KeyMap     map[string]string
-	Goroutines bool
-	MaskRequest func(map[string]interface{})
+	send         func(context.Context, []byte, map[string]string) error
+	KeyMap       map[string]string
+	Goroutines   bool
+	MaskRequest  func(map[string]interface{})
 	MaskResponse func(map[string]interface{})
 }
+
 func NewMaskLogger(maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{})) *MaskLogger {
 	return &MaskLogger{MaskRequest: maskRequest, MaskResponse: maskResponse}
 }
-func NewMaskLoggerWithSending(maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), send func(context.Context, []byte, map[string]string) (string, error), goroutines bool, options ...map[string]string) *MaskLogger {
+func NewMaskLoggerWithSending(maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), send func(context.Context, []byte, map[string]string) error, goroutines bool, options ...map[string]string) *MaskLogger {
 	var keyMap map[string]string
 	if len(options) >= 1 {
 		keyMap = options[0]
@@ -74,7 +75,7 @@ func BuildMaskedResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, r
 		json.Unmarshal([]byte(responseBody), &responseMap)
 		if len(responseMap) > 0 {
 			mask(responseMap)
-			responseString, err :=  json.Marshal(responseMap)
+			responseString, err := json.Marshal(responseMap)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
 			} else {
@@ -100,13 +101,13 @@ func BuildMaskedRequestBody(r *http.Request, request string, fields map[string]i
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		fields[request] = buf.String()
-		r.Body = ioutil.NopCloser(buf)
+		r.Body = io.NopCloser(buf)
 		requestBody := fields[request].(string)
 		requestMap := map[string]interface{}{}
 		json.Unmarshal([]byte(requestBody), &requestMap)
 		if len(requestMap) > 0 {
 			mask(requestMap)
-			requestString, err :=  json.Marshal(requestMap)
+			requestString, err := json.Marshal(requestMap)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
 			} else {

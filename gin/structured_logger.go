@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -15,7 +15,7 @@ type Formatter interface {
 	LogResponse(log func(context.Context, string, map[string]interface{}), r *http.Request, ww ResponseWriter, c LogConfig, startTime time.Time, response string, fields map[string]interface{}, singleLog bool)
 }
 type StructuredLogger struct {
-	send       func(ctx context.Context, data []byte, attributes map[string]string) (string, error)
+	send       func(context.Context, []byte, map[string]string) error
 	KeyMap     map[string]string
 	Goroutines bool
 }
@@ -25,7 +25,7 @@ var fieldConfig FieldConfig
 func NewLogger() *StructuredLogger {
 	return &StructuredLogger{}
 }
-func NewLoggerWithSending(send func(context.Context, []byte, map[string]string) (string, error), goroutines bool, options ...map[string]string) *StructuredLogger {
+func NewLoggerWithSending(send func(context.Context, []byte, map[string]string) error, goroutines bool, options ...map[string]string) *StructuredLogger {
 	var keyMap map[string]string
 	if len(options) >= 1 {
 		keyMap = options[0]
@@ -50,7 +50,7 @@ func (l *StructuredLogger) LogResponse(log func(context.Context, string, map[str
 		}
 	}
 }
-func Send(ctx context.Context, send func(ctx context.Context, data []byte, attributes map[string]string) (string, error), msg string, fields map[string]interface{}, keyMap map[string]string) {
+func Send(ctx context.Context, send func(context.Context, []byte, map[string]string) error, msg string, fields map[string]interface{}, keyMap map[string]string) {
 	m2 := AddKeyFields(msg, fields, keyMap)
 	b, err := json.Marshal(m2)
 	if err == nil {
@@ -98,7 +98,7 @@ func BuildRequestBody(r *http.Request, request string, fields map[string]interfa
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r.Body)
 		fields[request] = buf.String()
-		r.Body = ioutil.NopCloser(buf)
+		r.Body = io.NopCloser(buf)
 	}
 	return fields
 }
