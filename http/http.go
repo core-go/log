@@ -21,33 +21,32 @@ type Publisher struct {
 func NewPublisher(client *http.Client, url string, logError func(context.Context, string), goroutines bool, retries ...time.Duration) *Publisher {
 	return &Publisher{Client: client, Url: url, LogError: logError, Goroutines: goroutines, Retries: retries}
 }
-func (s *Publisher) Publish(ctx context.Context, data []byte, attributes map[string]string) (string, error) {
+func (s *Publisher) Publish(ctx context.Context, data []byte) error {
 	if s.Goroutines {
-		go postLog(ctx, s.Client, s.Url, data, nil, s.LogError, s.Retries...)
-		return "", nil
+		go postLog(ctx, s.Client, s.Url, data, s.LogError, s.Retries...)
+		return nil
 	} else {
-		err := postLog(ctx, s.Client, s.Url, data, nil, s.LogError, s.Retries...)
-		return "", err
+		return postLog(ctx, s.Client, s.Url, data, s.LogError, s.Retries...)
 	}
 }
-func postLog(ctx context.Context, client *http.Client, url string, log []byte, headers *map[string]string, logError func(context.Context, string), retries ...time.Duration) error {
+func postLog(ctx context.Context, client *http.Client, url string, log []byte, logError func(context.Context, string), retries ...time.Duration) error {
 	l := len(retries)
 	if l == 0 {
-		_, err := post(ctx, client, url, log, headers)
+		_, err := post(ctx, client, url, log)
 		return err
 	} else {
-		return postWithRetries(ctx, client, url, log, headers, logError, retries)
+		return postWithRetries(ctx, client, url, log, logError, retries)
 	}
 }
-func postWithRetries(ctx context.Context, client *http.Client, url string, log []byte, headers *map[string]string, logError func(context.Context, string), retries []time.Duration) error {
-	_, er1 := post(ctx, client, url, log, headers)
+func postWithRetries(ctx context.Context, client *http.Client, url string, log []byte, logError func(context.Context, string), retries []time.Duration) error {
+	_, er1 := post(ctx, client, url, log)
 	if er1 == nil {
 		return er1
 	}
 	i := 0
 	err := retry(ctx, retries, func() (err error) {
 		i = i + 1
-		_, er2 := post(ctx, client, url, log, headers)
+		_, er2 := post(ctx, client, url, log)
 		if er2 == nil && logError != nil {
 			logError(ctx, fmt.Sprintf("Send log successfully after %d retries %s", i, log))
 		}
@@ -58,8 +57,8 @@ func postWithRetries(ctx context.Context, client *http.Client, url string, log [
 	}
 	return err
 }
-func post(ctx context.Context, client *http.Client, url string, body []byte, headers *map[string]string) (*json.Decoder, error) {
-	res, er1 := do(ctx, client, url, "POST", body, headers)
+func post(ctx context.Context, client *http.Client, url string, body []byte) (*json.Decoder, error) {
+	res, er1 := do(ctx, client, url, "POST", body)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -69,19 +68,14 @@ func post(ctx context.Context, client *http.Client, url string, body []byte, hea
 	}
 	return json.NewDecoder(res.Body), nil
 }
-func do(ctx context.Context, client *http.Client, url string, method string, body []byte, headers *map[string]string) (*http.Response, error) {
+func do(ctx context.Context, client *http.Client, url string, method string, body []byte) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
-	return addHeaderAndDo(client, req, headers)
+	return addHeaderAndDo(client, req)
 }
-func addHeaderAndDo(client *http.Client, req *http.Request, headers *map[string]string) (*http.Response, error) {
-	if headers != nil {
-		for k, v := range *headers {
-			req.Header.Add(k, v)
-		}
-	}
+func addHeaderAndDo(client *http.Client, req *http.Request) (*http.Response, error) {
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	return resp, err
