@@ -34,12 +34,7 @@ func NewPubHealthChecker(name string, client *pubsub.Client, resourceId string, 
 	}
 	return &HealthChecker{name: name, client: client, permissionType: PermissionPublish, resourceId: resourceId, timeout: 4 * time.Second}
 }
-func NewSubHealthChecker(name string, client *pubsub.Client, resourceId string, timeout ...time.Duration) *HealthChecker {
-	if len(timeout) >= 1 {
-		return &HealthChecker{name: name, client: client, permissionType: PermissionSubscribe, resourceId: resourceId, timeout: timeout[0]}
-	}
-	return &HealthChecker{name: name, client: client, permissionType: PermissionSubscribe, resourceId: resourceId, timeout: 4 * time.Second}
-}
+
 func (h *HealthChecker) Name() string {
 	return h.name
 }
