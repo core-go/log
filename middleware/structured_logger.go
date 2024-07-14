@@ -14,14 +14,19 @@ type Formatter interface {
 	LogResponse(log func(context.Context, string, map[string]interface{}), r *http.Request, ww WrapResponseWriter, c LogConfig, startTime time.Time, response string, fields map[string]interface{}, includeRequest bool)
 }
 type StructuredLogger struct {
-	send   func(context.Context, []byte, map[string]string) error
-	KeyMap map[string]string
+	send         func(context.Context, []byte, map[string]string) error
+	KeyMap       map[string]string
+	RequestKey   string
+	StringFormat bool
 }
 
 var fieldConfig FieldConfig
 
 func NewLogger() *StructuredLogger {
 	return &StructuredLogger{}
+}
+func NewLoggerWithStringFormat(requestKey string, stringFormat bool) *StructuredLogger {
+	return &StructuredLogger{RequestKey: requestKey, StringFormat: stringFormat}
 }
 func NewLoggerWithSending(send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *StructuredLogger {
 	var keyMap map[string]string
@@ -33,7 +38,7 @@ func NewLoggerWithSending(send func(context.Context, []byte, map[string]string) 
 
 func (l *StructuredLogger) LogResponse(log func(context.Context, string, map[string]interface{}), r *http.Request, ww WrapResponseWriter,
 	c LogConfig, t1 time.Time, response string, fields map[string]interface{}, includeRequest bool) {
-	BuildResponseBody(ww, c, t1, response, fields)
+	BuildResponseBody(ww, c, t1, response, fields, l.StringFormat)
 	msg := r.Method + " " + r.RequestURI
 	log(r.Context(), msg, fields)
 	if l.send != nil {
@@ -42,15 +47,42 @@ func (l *StructuredLogger) LogResponse(log func(context.Context, string, map[str
 }
 func (l *StructuredLogger) LogRequest(log func(context.Context, string, map[string]interface{}), r *http.Request, fields map[string]interface{}) {
 	msg := "Request " + r.Method + " " + r.RequestURI
-	log(r.Context(), msg, fields)
+	if l.StringFormat {
+		log(r.Context(), msg, fields)
+	} else {
+		if len(l.RequestKey) > 0 {
+			req, ok := fields[l.RequestKey]
+			if ok {
+				requestBody, ok2 := req.(string)
+				if ok2 {
+					requestMap := map[string]interface{}{}
+					json.Unmarshal([]byte(requestBody), &requestMap)
+					if len(requestMap) > 0 {
+						fields[l.RequestKey] = requestMap
+					}
+				}
+			}
+		}
+	}
 	if l.send != nil {
 		go Send(r.Context(), l.send, msg, fields, l.KeyMap)
 	}
 }
 
-func BuildResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, response string, fields map[string]interface{}) {
+func BuildResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, response string, fields map[string]interface{}, isStringFormat bool) {
 	if len(c.Response) > 0 {
-		fields[c.Response] = response
+		if isStringFormat {
+			fields[c.Response] = response
+		} else {
+			responseBody := response
+			responseMap := map[string]interface{}{}
+			json.Unmarshal([]byte(responseBody), &responseMap)
+			if len(responseMap) > 0 {
+				fields[c.Response] = responseMap
+			} else {
+				fields[c.Response] = response
+			}
+		}
 	}
 	if len(c.ResponseStatus) > 0 {
 		fields[c.ResponseStatus] = ww.Status()
