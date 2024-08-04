@@ -28,12 +28,12 @@ func NewLogger() *StructuredLogger {
 func NewLoggerWithStringFormat(requestKey string, stringFormat bool) *StructuredLogger {
 	return &StructuredLogger{RequestKey: requestKey, StringFormat: stringFormat}
 }
-func NewLoggerWithSending(send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *StructuredLogger {
+func NewLoggerWithSending(requestKey string, stringFormat bool, send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *StructuredLogger {
 	var keyMap map[string]string
 	if len(options) >= 1 {
 		keyMap = options[0]
 	}
-	return &StructuredLogger{send: send, KeyMap: keyMap}
+	return &StructuredLogger{RequestKey: requestKey, StringFormat: stringFormat, send: send, KeyMap: keyMap}
 }
 
 func (l *StructuredLogger) LogResponse(log func(context.Context, string, map[string]interface{}), r *http.Request, ww WrapResponseWriter,
@@ -47,23 +47,20 @@ func (l *StructuredLogger) LogResponse(log func(context.Context, string, map[str
 }
 func (l *StructuredLogger) LogRequest(log func(context.Context, string, map[string]interface{}), r *http.Request, fields map[string]interface{}) {
 	msg := "Request " + r.Method + " " + r.RequestURI
-	if l.StringFormat {
-		log(r.Context(), msg, fields)
-	} else {
-		if len(l.RequestKey) > 0 {
-			req, ok := fields[l.RequestKey]
-			if ok {
-				requestBody, ok2 := req.(string)
-				if ok2 {
-					requestMap := map[string]interface{}{}
-					json.Unmarshal([]byte(requestBody), &requestMap)
-					if len(requestMap) > 0 {
-						fields[l.RequestKey] = requestMap
-					}
+	if !l.StringFormat && len(l.RequestKey) > 0 {
+		req, ok := fields[l.RequestKey]
+		if ok {
+			requestBody, ok2 := req.(string)
+			if ok2 {
+				requestMap := map[string]interface{}{}
+				json.Unmarshal([]byte(requestBody), &requestMap)
+				if len(requestMap) > 0 {
+					fields[l.RequestKey] = requestMap
 				}
 			}
 		}
 	}
+	log(r.Context(), msg, fields)
 	if l.send != nil {
 		go Send(r.Context(), l.send, msg, fields, l.KeyMap)
 	}
@@ -81,6 +78,19 @@ func BuildResponseBody(ww WrapResponseWriter, c LogConfig, t1 time.Time, respons
 				fields[c.Response] = responseMap
 			} else {
 				fields[c.Response] = response
+			}
+		}
+	}
+	if !isStringFormat && len(c.Request) > 0 {
+		req, ok := fields[c.Request]
+		if ok {
+			requestBody, ok2 := req.(string)
+			if ok2 {
+				requestMap := map[string]interface{}{}
+				json.Unmarshal([]byte(requestBody), &requestMap)
+				if len(requestMap) > 0 {
+					fields[c.Request] = requestMap
+				}
 			}
 		}
 	}

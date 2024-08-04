@@ -20,12 +20,12 @@ type MaskLogger struct {
 func NewMaskLogger(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{})) *MaskLogger {
 	return &MaskLogger{RequestKey: requestKey, MaskRequest: maskRequest, MaskResponse: maskResponse}
 }
-func NewMaskLoggerWithSending(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *MaskLogger {
+func NewMaskLoggerWithSending(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), stringFormat bool, send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *MaskLogger {
 	var keyMap map[string]string
 	if len(options) >= 1 {
 		keyMap = options[0]
 	}
-	return &MaskLogger{RequestKey: requestKey, MaskRequest: maskRequest, MaskResponse: maskResponse, send: send, KeyMap: keyMap}
+	return &MaskLogger{RequestKey: requestKey, MaskRequest: maskRequest, MaskResponse: maskResponse, StringFormat: stringFormat, send: send, KeyMap: keyMap}
 }
 
 func (l *MaskLogger) LogResponse(log func(context.Context, string, map[string]interface{}), r *http.Request, ww ResponseWriter,

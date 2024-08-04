@@ -54,9 +54,7 @@ func Send(ctx context.Context, send func(context.Context, []byte, map[string]str
 }
 func (l *StructuredLogger) LogRequest(log func(context.Context, string, map[string]interface{}), r *http.Request, fields map[string]interface{}) {
 	msg := "Request " + r.Method + " " + r.RequestURI
-	if l.StringFormat {
-		log(r.Context(), msg, fields)
-	} else if len(l.RequestKey) > 0 {
+	if !l.StringFormat && len(l.RequestKey) > 0 {
 		req, ok := fields[l.RequestKey]
 		if ok {
 			requestBody, ok2 := req.(string)
@@ -69,6 +67,7 @@ func (l *StructuredLogger) LogRequest(log func(context.Context, string, map[stri
 			}
 		}
 	}
+	log(r.Context(), msg, fields)
 	if l.send != nil {
 		go Send(r.Context(), l.send, msg, fields, l.KeyMap)
 	}
@@ -86,6 +85,19 @@ func BuildResponse(ww ResponseWriter, c LogConfig, t1 time.Time, response string
 				fields[c.Response] = responseMap
 			} else {
 				fields[c.Response] = response
+			}
+		}
+	}
+	if !isStringFormat && len(c.Request) > 0 {
+		req, ok := fields[c.Request]
+		if ok {
+			requestBody, ok2 := req.(string)
+			if ok2 {
+				requestMap := map[string]interface{}{}
+				json.Unmarshal([]byte(requestBody), &requestMap)
+				if len(requestMap) > 0 {
+					fields[c.Request] = requestMap
+				}
 			}
 		}
 	}

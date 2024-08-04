@@ -2,7 +2,7 @@
 - wrapper of [zap](https://pkg.go.dev/go.uber.org/zap)
 - wrapper of [logrus](https://github.com/sirupsen/logrus)
 - middleware tracing log for [Echo](https://github.com/labstack/echo), [Gin](https://github.com/gin-gonic/gin), or net/http ([Gorilla mux](https://github.com/gorilla/mux), [Go-chi](https://github.com/go-chi/chi))
-
+  - useful for Financial Products (to comply with <b>PCI-DSS</b> standards) and Healthcare (to comply with <b>HIPAA</b> regulations)
 ### A typical micro service
 - When you zoom one micro service, the flow is as below, and you can see "log (zap, logrus)" and "middleware" in the full picture:
   ![A typical micro service](https://cdn-images-1.medium.com/max/800/1*d9kyekAbQYBxH-C6w38XZQ.png)
@@ -124,14 +124,12 @@ Import:
 import "github.com/core-go/log"
 ```
 
-## middleware log tracing
+## Summary of middleware log tracing
+#### log tracing at middleware
 middleware log for
 - http
 - echo
 - gin
-
-### Features
-#### log tracing at middleware
 ##### Support to turn on, turn off
 - request
 - response
@@ -140,14 +138,10 @@ middleware log for
 - response content length
 ##### Support to mask or encrypt fields
 - support to mask or encrypt fields, such as mobileNumber, creditCardNumber
-
+- useful for Financial Products (to comply with <b>PCI-DSS</b> standards) and Healthcare (to comply with <b>HIPAA</b> regulations)
 ## Appendix
 ### Microservice Architect
 ![Microservice Architect](https://cdn-images-1.medium.com/max/800/1*vKeePO_UC73i7tfymSmYNA.png)
-
-### A typical micro service
-- When you zoom one micro service, the flow is as below, and you can see "middleware" in the full picture:
-  ![A typical micro service](https://cdn-images-1.medium.com/max/800/1*d9kyekAbQYBxH-C6w38XZQ.png)
 
 ### Cross-cutting concerns
 - "middleware" in the full picture of cross-cutting concerns
