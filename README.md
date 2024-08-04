@@ -3,6 +3,10 @@
 - wrapper of [logrus](https://github.com/sirupsen/logrus)
 - middleware tracing log for [Echo](https://github.com/labstack/echo), [Gin](https://github.com/gin-gonic/gin), or net/http ([Gorilla mux](https://github.com/gorilla/mux), [Go-chi](https://github.com/go-chi/chi))
   - useful for Financial Products (to comply with <b>PCI-DSS</b> standards) and Healthcare (to comply with <b>HIPAA</b> regulations)
+
+
+- You can refer to [middleware-log-tracing](https://www.linkedin.com/pulse/middleware-log-tracing-go-duc-nguyen-uh0pc) at my [Linked In](https://vn.linkedin.com/in/duc-nguyen-437240239?trk=article-ssr-frontend-pulse_publisher-author-card) for more details.
+
 ### A typical micro service
 - When you zoom one micro service, the flow is as below, and you can see "log (zap, logrus)" and "middleware" in the full picture:
   ![A typical micro service](https://cdn-images-1.medium.com/max/800/1*d9kyekAbQYBxH-C6w38XZQ.png)
