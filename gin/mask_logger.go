@@ -17,8 +17,8 @@ type MaskLogger struct {
 	StringFormat bool
 }
 
-func NewMaskLogger(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{})) *MaskLogger {
-	return &MaskLogger{RequestKey: requestKey, MaskRequest: maskRequest, MaskResponse: maskResponse}
+func NewMaskLogger(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), stringFormat bool) *MaskLogger {
+	return &MaskLogger{RequestKey: requestKey, MaskRequest: maskRequest, MaskResponse: maskResponse, StringFormat: stringFormat}
 }
 func NewMaskLoggerWithSending(requestKey string, maskRequest func(map[string]interface{}), maskResponse func(map[string]interface{}), stringFormat bool, send func(context.Context, []byte, map[string]string) error, options ...map[string]string) *MaskLogger {
 	var keyMap map[string]string

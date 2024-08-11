@@ -148,5 +148,5 @@ middleware log for
 ![Microservice Architect](https://cdn-images-1.medium.com/max/800/1*vKeePO_UC73i7tfymSmYNA.png)
 
 ### Cross-cutting concerns
-- "middleware" in the full picture of cross-cutting concerns
+- "log" in the full picture of cross-cutting concerns
   ![cross-cutting concerns](https://cdn-images-1.medium.com/max/800/1*y088T4NoJNrL9sqrKeSyqw.png)
