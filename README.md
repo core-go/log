@@ -48,8 +48,8 @@
 ### Middleware Integration
 #### Features
 - <b>Middleware Function</b>: Designed to integrate seamlessly with existing Go libraries: [Echo](https://github.com/labstack/echo), [Gin](https://github.com/gin-gonic/gin), or net/http ([Gorilla mux](https://github.com/gorilla/mux), [Go-chi](https://github.com/go-chi/chi)).
-  - Sample for [Echo](https://github.com/labstack/echo) is at [go-sql-echo-sample](https://github.com/go-tutorials/go-sql-echo-sample)
-  - Sample for [Gin](https://github.com/gin-gonic/gin) is at [go-sql-gin-sample](https://github.com/go-tutorials/go-sql-gin-sample)
+  - Sample for [Echo](https://github.com/labstack/echo) is at [go-echo-sql-sample](https://github.com/go-tutorials/go-echo-sql-sample)
+  - Sample for [Gin](https://github.com/gin-gonic/gin) is at [go-gin-sql-sample](https://github.com/go-tutorials/go-gin-sql-sample)
   - Sample for [Gorilla mux](https://github.com/gorilla/mux) is at [go-sql-sample](https://github.com/go-tutorials/go-sql-sample)
 - <b>Context Handling</b>: Pass context to handle request-specific data throughout the middleware chain.
 #### Benefits
@@ -80,8 +80,8 @@
 ### Sensitive Data Encryption
 #### Features
 - Mask/Encrypt sensitive data in the request and response bodies.
-  - Sample for [Echo](https://github.com/labstack/echo) is at [go-sql-echo-sample](https://github.com/go-tutorials/go-sql-echo-sample)
-  - Sample for [Gin](https://github.com/gin-gonic/gin) is at [go-sql-gin-sample](https://github.com/go-tutorials/go-sql-gin-sample)
+  - Sample for [Echo](https://github.com/labstack/echo) is at [go-echo-sql-sample](https://github.com/go-tutorials/go-echo-sql-sample)
+  - Sample for [Gin](https://github.com/gin-gonic/gin) is at [go-gin-sql-sample](https://github.com/go-tutorials/go-gin-sql-sample)
   - Sample for [Gorilla mux](https://github.com/gorilla/mux) is at [go-sql-sample](https://github.com/go-tutorials/go-sql-sample)
 - Sensitive Data Identification: identify and encrypt specific fields in JSON payloads.
 
